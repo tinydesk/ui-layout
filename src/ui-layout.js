@@ -358,8 +358,6 @@ angular.module('ui.layout', [])
           c.maxSize = opts.maxSizes[i];
           c.minSize = opts.minSizes[i];
 
-          //TODO: adjust size if autosize is greater than the maxSize
-
           if (!LayoutContainer.isSplitbar(c)) {
             var newSize;
             if (opts.sizes[i] === 'auto') {
@@ -370,6 +368,16 @@ angular.module('ui.layout', [])
               }
             } else {
               newSize = opts.sizes[i];
+            }
+
+            // don't allow the container size to intialize larger than the maxSize
+            if(c.maxSize !== null && newSize > c.maxSize) {
+              newSize = c.maxSize;
+            }
+
+            // don't allow the container size to initialize smaller than the minSize
+            if(c.minSize !== null && !c.collapsed && newSize < c.minSize) {
+              newSize = c.minSize;
             }
 
             c.size = (newSize !== null) ? newSize : autoSize;
