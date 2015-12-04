@@ -198,6 +198,20 @@ angular.module('ui.layout', [])
       }
     }
 
+    /**
+     * Converts the given css-like dimension string to a number representing the pixel size of the respective dimension.
+     * @param dimensionString The dimension string. Contains a number followed by either 'px' or '%'.
+     * @param referenceSize The size to which '%' is referring to.
+     * @returns int A number indicating the pixel size of the corresponding dimension.
+       */
+    function px(dimensionString, referenceSize) {
+      if(ctrl.isPercent(dimensionString)) {
+        return ctrl.convertToPixels(dimensionString, referenceSize);
+      } else {
+        return parseInt(dimensionString);
+      }
+    }
+
     //================================================================================
     // Public Controller Functions
     //================================================================================
@@ -307,30 +321,18 @@ angular.module('ui.layout', [])
             opts.maxSizes[i] = optionValue(c.maxSize);
 
             if (opts.sizes[i] !== 'auto') {
-              if (ctrl.isPercent(opts.sizes[i])) {
-                opts.sizes[i] = ctrl.convertToPixels(opts.sizes[i], originalSize);
-              } else {
-                opts.sizes[i] = parseInt(opts.sizes[i]);
-              }
+              opts.sizes[i] = px(opts.sizes[i], originalSize);
             }
 
             if (opts.minSizes[i] !== null) {
-              if (ctrl.isPercent(opts.minSizes[i])) {
-                opts.minSizes[i] = ctrl.convertToPixels(opts.minSizes[i], originalSize);
-              } else {
-                opts.minSizes[i] = parseInt(opts.minSizes[i]);
-              }
+              opts.minSizes[i] = px(opts.minSizes[i], originalSize);
 
               // don't allow the container size to initialize smaller than the minSize
               if (!c.collapsed && opts.sizes[i] < opts.minSizes[i]) opts.sizes[i] = opts.minSizes[i];
             }
 
             if (opts.maxSizes[i] !== null) {
-              if (ctrl.isPercent(opts.maxSizes[i])) {
-                opts.maxSizes[i] = ctrl.convertToPixels(opts.maxSizes[i], originalSize);
-              } else {
-                opts.maxSizes[i] = parseInt(opts.maxSizes[i]);
-              }
+              opts.maxSizes[i] = px(opts.maxSizes[i], originalSize);
 
               // don't allow the container size to intialize larger than the maxSize
               if (opts.sizes[i] > opts.maxSizes[i]) opts.sizes[i] = opts.maxSizes[i];
