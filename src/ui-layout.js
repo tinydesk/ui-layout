@@ -123,9 +123,7 @@ angular.module('ui.layout', [])
 
             //update after container size if the position has changed
             if (afterContainer[position] != oldAfterContainerPosition) {
-              afterContainer.size = (nextSplitbarIndex !== null) ?
-              (oldAfterContainerPosition + afterContainer.size) - (newPosition + dividerSize) :
-              elementSize - (newPosition + dividerSize);
+              afterContainer.size = (oldAfterContainerPosition + afterContainer.size) - (newPosition + dividerSize);
               // store the current value to preserve this size during onResize
               afterContainer.uncollapsedSize = afterContainer.size;
             }
@@ -203,12 +201,30 @@ angular.module('ui.layout', [])
      * @param dimensionString The dimension string. Contains a number followed by either 'px' or '%'.
      * @param referenceSize The size to which '%' is referring to.
      * @returns int A number indicating the pixel size of the corresponding dimension.
-       */
+     */
     function px(dimensionString, referenceSize) {
-      if(ctrl.isPercent(dimensionString)) {
+      if (ctrl.isPercent(dimensionString)) {
         return ctrl.convertToPixels(dimensionString, referenceSize);
       } else {
         return parseInt(dimensionString);
+      }
+    }
+
+    /**
+     * Limits the given size to the bounds provided by the given range.
+     * @param size The size that should be limited.
+     * @param min The minimum possible value. Might be null which is interpreted as "no minimum".
+     * @param max The maximum possible value. Might be null which is interpreted as "no maximum".
+     * @param collapsed If the corresponding container is collapsed, the minimum value is not considered.
+     * @returns {number} The value if it is between min and max, and one of the bounds otherwise.
+     */
+    function limit(size, min, max, collapsed) {
+      if (min !== null && !collapsed && size < min) {
+        return min;
+      } else if (max !== null && size > max) {
+        return max;
+      } else {
+        return size;
       }
     }
 
@@ -308,10 +324,14 @@ angular.module('ui.layout', [])
       var availableSize = elementSize - (dividerSize * numOfSplitbars);
       var originalSize = availableSize;
       var usedSpace = 0;
-      var numOfAutoContainers = 0;
+      var autoContainers = [];
       if (ctrl.containers.length > 0 && $element.children().length > 0) {
 
         // calculate sizing for ctrl.containers
+
+        // first pass: ---------------------
+        // calculate fixed sized containers and count auto sized containers
+
         for(i = 0; i < ctrl.containers.length; i++) {
           if (!LayoutContainer.isSplitbar(ctrl.containers[i])) {
 
@@ -320,40 +340,73 @@ angular.module('ui.layout', [])
             opts.minSizes[i] = optionValue(c.minSize);
             opts.maxSizes[i] = optionValue(c.maxSize);
 
-            if (opts.sizes[i] !== 'auto') {
-              opts.sizes[i] = px(opts.sizes[i], originalSize);
-            }
-
             if (opts.minSizes[i] !== null) {
               opts.minSizes[i] = px(opts.minSizes[i], originalSize);
-
-              // don't allow the container size to initialize smaller than the minSize
-              if (!c.collapsed && opts.sizes[i] < opts.minSizes[i]) opts.sizes[i] = opts.minSizes[i];
             }
 
             if (opts.maxSizes[i] !== null) {
               opts.maxSizes[i] = px(opts.maxSizes[i], originalSize);
-
-              // don't allow the container size to intialize larger than the maxSize
-              if (opts.sizes[i] > opts.maxSizes[i]) opts.sizes[i] = opts.maxSizes[i];
             }
 
-            if (opts.sizes[i] === 'auto') {
-              numOfAutoContainers++;
-            } else {
+            if (opts.sizes[i] !== 'auto') {
+              opts.sizes[i] = limit(px(opts.sizes[i], originalSize), opts.minSizes[i], opts.maxSizes[i], c.collapsed);
               availableSize -= opts.sizes[i];
+            } else {
+              // auto:
+              autoContainers.push(i);
             }
           }
         }
 
-        // FIXME: autoSize if frequently Infinity, since numOfAutoContainers is frequently 0, no need to calculate that
-        // set the sizing for the ctrl.containers
+        console.log(ctrl.id, 'AUTO CONTAINERS: ' + autoContainers);
+
+        // --------------------------------
+
+        // second pass: -------------------
+        // distribute all auto sizes while respecting min, max settings as good as possible
+
         /*
          * When the parent size is odd, rounding down the `autoSize` leaves a remainder.
          * This remainder is added to the last auto-sized container in a layout.
          */
-        var autoSize = Math.floor(availableSize / numOfAutoContainers),
-          remainder = availableSize - autoSize * numOfAutoContainers;
+        var autoSize, remainder;
+        var updateAutoSize = function(count) {
+          autoSize = Math.floor(availableSize / count);
+          remainder = availableSize - autoSize * count;
+          console.log(ctrl.id, availableSize, count);
+        };
+
+        var margin = function(i) {
+          return Math.max(availableSize - opts.minSizes[i], opts.maxSizes[i] - availableSize);
+        };
+
+        autoContainers.sort(function(a, b) {
+          return margin(b) - margin(a);
+        });
+
+        updateAutoSize(autoContainers.length);
+        for(var j = 0; j < autoContainers.length; j++) {
+          var i = autoContainers[j];
+          c = ctrl.containers[i];
+          if (opts.sizes[i] === 'auto') {
+
+            var size = autoSize;
+            if (j === autoContainers.length - 1) {
+              size += remainder;
+            }
+
+            opts.sizes[i] = limit(size, opts.minSizes[i], opts.maxSizes[i], c.collapsed);
+            console.log(opts.sizes[i]);
+            availableSize -= opts.sizes[i];
+
+            updateAutoSize(autoContainers.length - j - 1);
+          }
+        }
+
+        // --------------------------------
+
+        // third pass: -------------------
+        // copy computed values onto container and set flow property
         for(i = 0; i < ctrl.containers.length; i++) {
           c = ctrl.containers[i];
           c[ctrl.sizeProperties.flowProperty] = usedSpace; // left/top
@@ -361,34 +414,14 @@ angular.module('ui.layout', [])
           c.minSize = opts.minSizes[i];
 
           if (!LayoutContainer.isSplitbar(c)) {
-            var newSize;
-            if (opts.sizes[i] === 'auto') {
-              newSize = autoSize;
-              // add the rounding down remainder to the last auto-sized container in the layout
-              if (remainder > 0 && i === ctrl.containers.length - 1) {
-                newSize += remainder;
-              }
-            } else {
-              newSize = opts.sizes[i];
-            }
-
-            // don't allow the container size to intialize larger than the maxSize
-            if(c.maxSize !== null && newSize > c.maxSize) {
-              newSize = c.maxSize;
-            }
-
-            // don't allow the container size to initialize smaller than the minSize
-            if(c.minSize !== null && !c.collapsed && newSize < c.minSize) {
-              newSize = c.minSize;
-            }
-
-            c.size = (newSize !== null) ? newSize : autoSize;
+            c.size = opts.sizes[i];
           } else {
             c.size = dividerSize;
           }
 
           usedSpace += c.size;
         }
+        // --------------------------------
       }
     };
 
