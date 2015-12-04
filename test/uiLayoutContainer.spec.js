@@ -3,17 +3,19 @@
 
 describe('Directive: uiLayoutContainer', function () {
   var scope, element, $compile,
-    template = '' +
-    '<div ui-layout="{flow: \'column\'}" ui-layout-loaded>' +
-    '  <div ui-layout-container collapsed="layout.beforeContainer" size="100px" min-size="50px"  max-size="200px" resizable="false">One</div>' +
-    '  <div ui-layout-container data-collapsed="layout.afterContainer">Two</div>' +
-    '</div>';
+    template = function(params) {
+      return '' +
+      '<div ui-layout="{flow: \'column\'}" ui-layout-loaded ' + (params.animate || '') + '>' +
+      '  <div ui-layout-container collapsed="layout.beforeContainer" size="100px" min-size="50px"  max-size="200px" resizable="false">One</div>' +
+      '  <div ui-layout-container data-collapsed="layout.afterContainer">Two</div>' +
+      '</div>';
+    };
 
   function createDirective(layout) {
     var elm;
 
     scope.layout = layout;
-    elm = angular.element(template);
+    elm = angular.element(template(layout));
     angular.element(document.body).prepend(elm);
     $compile(elm)(scope);
     scope.$digest();
@@ -38,7 +40,7 @@ describe('Directive: uiLayoutContainer', function () {
 
   it('should get initial attribute values', function () {
     // this tests values _after_ the layout has been calculated
-    element = createDirective({ beforeContainer: true, afterContainer: false});
+    element = createDirective({ beforeContainer: true, afterContainer: false });
     var divs = element.find('div'),
       beforeContainer = divs[0],
       afterContainer = divs[2],
@@ -62,6 +64,34 @@ describe('Directive: uiLayoutContainer', function () {
     // every container has a storageId:
     expect(acScope.container.storageId).not.toBeNull();
 
+  });
+
+  it('should be animated when the attribute is explicitly set', function() {
+    element = createDirective({ beforeContainer: true, afterContainer: false, animate: 'animate="true"'});
+    var divs = element.find('div'),
+      beforeContainer = divs[0],
+      afterContainer = divs[2];
+
+    expect(angular.element(beforeContainer).hasClass('animate-column')).toEqual(true);
+    expect(angular.element(afterContainer).hasClass('animate-column')).toEqual(true);
+  });
+
+  it('should not be animated when the attribute is not set', function() {
+    element = createDirective({ beforeContainer: true, afterContainer: false});
+    var divs = element.find('div'),
+      beforeContainer = divs[0],
+      afterContainer = divs[2];
+    expect(angular.element(beforeContainer).hasClass('animate-column')).toEqual(false);
+    expect(angular.element(afterContainer).hasClass('animate-column')).toEqual(false);
+  });
+
+  it('should not be animated when the attribute is set to a value different from true', function() {
+    element = createDirective({ beforeContainer: true, afterContainer: false, animate: 'animate="false"'});
+    var divs = element.find('div'),
+      beforeContainer = divs[0],
+      afterContainer = divs[2];
+    expect(angular.element(beforeContainer).hasClass('animate-column')).toEqual(false);
+    expect(angular.element(afterContainer).hasClass('animate-column')).toEqual(false);
   });
 
 });
