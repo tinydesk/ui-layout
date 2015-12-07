@@ -226,6 +226,7 @@ angular.module('ui.layout', [])
       } else {
         return size;
       }
+
     }
 
     //================================================================================
@@ -325,6 +326,7 @@ angular.module('ui.layout', [])
       var originalSize = availableSize;
       var usedSpace = 0;
       var autoContainers = [];
+      var avgMinSize = 0;
       if (ctrl.containers.length > 0 && $element.children().length > 0) {
 
         // calculate sizing for ctrl.containers
@@ -353,12 +355,21 @@ angular.module('ui.layout', [])
               availableSize -= opts.sizes[i];
             } else {
               // auto:
+              // always satisfy minimum size:
+              if (c.collapsed) {
+                opts.sizes[i] = 0;
+              } else {
+                opts.sizes[i] = opts.minSizes[i] || 0;
+              }
+              availableSize -= opts.sizes[i];
+              avgMinSize += opts.sizes[i];
+
+              // store for later processing
               autoContainers.push(i);
             }
           }
         }
-
-        console.log(ctrl.id, 'AUTO CONTAINERS: ' + autoContainers);
+        avgMinSize = avgMinSize / autoContainers.length;
 
         // --------------------------------
 
@@ -373,33 +384,32 @@ angular.module('ui.layout', [])
         var updateAutoSize = function(count) {
           autoSize = Math.floor(availableSize / count);
           remainder = availableSize - autoSize * count;
-          console.log(ctrl.id, availableSize, count);
         };
-
-        var margin = function(i) {
-          return Math.max(availableSize - opts.minSizes[i], opts.maxSizes[i] - availableSize);
-        };
-
-        autoContainers.sort(function(a, b) {
-          return margin(b) - margin(a);
-        });
 
         updateAutoSize(autoContainers.length);
+
+        // sort by max-size ascending:
+        autoContainers.sort(function(a, b) {
+          return (opts.maxSizes[a] === null) || (opts.maxSizes[a] > opts.maxSizes[b]);
+        });
+
+        var availableSizeProportionLeft = autoContainers.length;
         for(var j = 0; j < autoContainers.length; j++) {
           var i = autoContainers[j];
           c = ctrl.containers[i];
-          if (opts.sizes[i] === 'auto') {
 
-            var size = autoSize;
-            if (j === autoContainers.length - 1) {
-              size += remainder;
-            }
+          var weight = 1; // TODO: add a "weight" attribute
+          var size = autoSize * weight;
+          if (j === autoContainers.length - 1) {
+            size += remainder;
+          }
 
-            opts.sizes[i] = limit(size, opts.minSizes[i], opts.maxSizes[i], c.collapsed);
-            console.log(opts.sizes[i]);
-            availableSize -= opts.sizes[i];
+          opts.sizes[i] = limit(size + opts.sizes[i] - (opts.sizes[i] - avgMinSize), opts.minSizes[i], opts.maxSizes[i], c.collapsed);
+          availableSize -= size;
+          availableSizeProportionLeft -= weight;
 
-            updateAutoSize(autoContainers.length - j - 1);
+          if (j < autoContainers.length - 1) {
+            updateAutoSize(availableSizeProportionLeft);
           }
         }
 
