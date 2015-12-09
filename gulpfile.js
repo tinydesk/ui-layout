@@ -78,7 +78,7 @@ gulp.task('karma:jqlite:watch', function(){
 gulp.task('karma:jquery:unit', kwjQuery.simpleRun);
 gulp.task('karma:jquery:watch', function(){
   kwjQuery.inBackground();
-  gulp.watch(['./test/**', './src/**'], function(){
+  gulp.watch('./test/**', function(){
     kwjQuery.run();
   });
 });
