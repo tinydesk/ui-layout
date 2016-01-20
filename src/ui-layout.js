@@ -783,8 +783,8 @@ angular.module('ui.layout', [])
   }])
 
   .directive('uiLayoutContainer',
-    ['LayoutContainer', '$compile', '$timeout',
-      function(LayoutContainer, $compile, $timeout) {
+    ['LayoutContainer', '$compile',
+      function(LayoutContainer, $compile) {
         return {
           restrict: 'AE',
           require: '^uiLayout',
@@ -833,7 +833,7 @@ angular.module('ui.layout', [])
                   element.addClass(animationClass);
                 }
 
-                scope.$watch('collapsed', function (collapsed) {
+                scope.$watch('collapsed', function () {
                   if (angular.isDefined(scope.collapsed)) {
                     scope.container.collapsed = scope.collapsed;
                     ctrl.processToggleContainer(ctrl.containers.indexOf(scope.container));
