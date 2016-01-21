@@ -862,7 +862,7 @@ angular.module('ui.layout', [])
                 var index = ctrl.indexOfElement(element);
                 var splitbar = angular.element('<div ui-splitbar>' +
                   '<a><span class="ui-splitbar-icon ui-splitbar-toggle"></span></a>' +
-                  '<a><span class="ui-splitbar-icon ui-splitbar-handle"></span></a>' +
+                  '<a class="ui-splitbar-handle-container"><span class="ui-splitbar-icon ui-splitbar-handle"></span></a>' +
                   '<a><span class="ui-splitbar-icon ui-splitbar-toggle"></span></a>' +
                   '</div>');
                 if(0 < index && !ctrl.hasSplitbarBefore(scope.container)) {

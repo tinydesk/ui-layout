@@ -73,8 +73,8 @@
   overflow-x: hidden;
 }
 
-.ui-layout-column > .ui-splitbar > a,
-.ui-layout-row > .ui-splitbar > a {
+.ui-layout-column > .ui-splitbar > a:not(.ui-splitbar-handle-container),
+.ui-layout-row > .ui-splitbar > a:not(.ui-splitbar-handle-container) {
   cursor: pointer;
   text-align: center;
   font-size: 16px;
