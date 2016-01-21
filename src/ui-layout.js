@@ -733,16 +733,19 @@ angular.module('ui.layout', [])
         });
 
         element.on('mousedown touchstart', function(e) {
-          ctrl.movingSplitbar = scope.splitbar;
-          ctrl.processSplitbar(scope.splitbar);
+          if (e.button === 0) {
+            // only trigger when left mouse button is pressed:
+            ctrl.movingSplitbar = scope.splitbar;
+            ctrl.processSplitbar(scope.splitbar);
 
-          e.preventDefault();
-          e.stopPropagation();
+            e.preventDefault();
+            e.stopPropagation();
 
-          htmlElement.on('mousemove touchmove', function(event) {
-            scope.$apply(angular.bind(ctrl, ctrl.mouseMoveHandler, event));
-          });
-          return false;
+            htmlElement.on('mousemove touchmove', function (event) {
+              scope.$apply(angular.bind(ctrl, ctrl.mouseMoveHandler, event));
+            });
+            return false;
+          }
         });
 
         htmlElement.on('mouseup touchend', function(event) {
