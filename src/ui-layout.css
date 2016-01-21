@@ -76,6 +76,10 @@
 .ui-layout-column > .ui-splitbar > a:not(.ui-splitbar-handle-container),
 .ui-layout-row > .ui-splitbar > a:not(.ui-splitbar-handle-container) {
   cursor: pointer;
+}
+
+.ui-layout-column > .ui-splitbar > a,
+.ui-layout-row > .ui-splitbar > a {
   text-align: center;
   font-size: 16px;
   color: #aaa;
