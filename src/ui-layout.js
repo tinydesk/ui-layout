@@ -841,6 +841,19 @@ angular.module('ui.layout', [])
                   element.addClass(animationClass);
                 }
 
+				scope.$watch('size', function(size) {
+                  scope.container.uncollapsedSize = size;
+                  ctrl.calculate();
+                });
+                scope.$watch('minSize', function(minSize) {
+                  scope.container.minSize = minSize;
+                  ctrl.calculate();
+                });
+                scope.$watch('maxSize', function(maxSize) {
+                  scope.container.maxSize = maxSize;
+                  ctrl.calculate();
+                });
+
                 scope.$watch('collapsed', function () {
                   if (angular.isDefined(scope.collapsed)) {
                     scope.container.collapsed = scope.collapsed;
