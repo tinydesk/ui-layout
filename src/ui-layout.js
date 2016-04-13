@@ -302,7 +302,13 @@ angular.module('ui.layout', [])
       var c, i;
       var dividerSize = parseInt(opts.dividerSize);
       var elementSize = $element[0].getBoundingClientRect()[ctrl.sizeProperties.sizeProperty];
-      var availableSize = elementSize - (dividerSize * numOfSplitbars);
+      var numOfVisibleSplitbars = numOfSplitbars;
+      if (opts.hideCollapsedSplitbar) {
+        numOfVisibleSplitbars = ctrl.containers.filter(function(c) {
+          return LayoutContainer.isSplitbar(c) && !c.collapsed;
+        }).length;
+      }
+      var availableSize = elementSize - (dividerSize * numOfVisibleSplitbars);
       var originalSize = availableSize;
       var usedSpace = 0;
       var numOfAutoContainers = 0;
@@ -313,7 +319,7 @@ angular.module('ui.layout', [])
           if(!LayoutContainer.isSplitbar(ctrl.containers[i])) {
 
             c = ctrl.containers[i];
-            opts.sizes[i] = c.collapsed ? '0px' : c.isCentral ? 'auto' : optionValue(c.uncollapsedSize) || 'auto';
+            opts.sizes[i] = c.collapsed ? (optionValue(c.minSize) || '0px') : c.isCentral ? 'auto' : optionValue(c.uncollapsedSize) || 'auto';
             opts.minSizes[i] = optionValue(c.minSize);
             opts.maxSizes[i] = optionValue(c.maxSize);
 
@@ -385,7 +391,7 @@ angular.module('ui.layout', [])
 
             c.size = (newSize !== null) ? newSize : autoSize;
           } else {
-            c.size = dividerSize;
+            c.size = (c.collapsed && opts.hideCollapsedSplitbar) ? 0 : dividerSize;
           }
 
           usedSpace += c.size;
@@ -678,6 +684,7 @@ angular.module('ui.layout', [])
         afterIcon.addClass(afterIconClass);
 
         scope.splitbar.notifyToggleBefore = function(isCollapsed) {
+          scope.splitbar.collapsed = isCollapsed;
           if(isCollapsed) {
             afterButton.css('display', 'none');
 
@@ -702,6 +709,7 @@ angular.module('ui.layout', [])
         };
 
         scope.splitbar.notifyToggleAfter = function(isCollapsed) {
+          scope.splitbar.collapsed = isCollapsed;
           if(isCollapsed) {
             prevButton.css('display', 'none');
 
@@ -896,6 +904,26 @@ angular.module('ui.layout', [])
         };
       }])
 
+  .directive('uiLayoutLoaded', [function() {
+    // This is not needed any more, because toggling does not depend on the logic
+    // of prevButton and nextButton. It is only kept to simulate the previous
+    // behaviour and avoid a breaking change. It should be removed with the next
+    // major version upgrade.
+    return {
+      require: '^uiLayout',
+      restrict: 'A',
+      priority: -100,
+      link: function($scope, el, attrs){
+        // negation is safe here, because we are expecting non-empty string
+        if (!attrs['uiLayoutLoaded']) {
+          $scope.$broadcast('ui.layout.loaded', null);
+        } else {
+          $scope.$broadcast('ui.layout.loaded',  attrs['uiLayoutLoaded']);
+        }
+      }
+    };
+  }])
+
   .factory('LayoutContainer', function() {
     function BaseContainer() {
 
@@ -941,6 +969,7 @@ angular.module('ui.layout', [])
       this.size = 10;
       this.position = 0;
       this.element = null;
+      this.collapsed = false;
     }
 
     return {
