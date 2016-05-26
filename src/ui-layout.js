@@ -694,9 +694,15 @@ angular.module('ui.layout', [])
 
         prevIcon.addClass(prevIconClass);
         afterIcon.addClass(afterIconClass);
+        
+        function getCollapse() {
+          var before = ctrl.containers[index - 1];
+          var after = ctrl.containers[index + 1];
+          return (before !== undefined && before.collapsed) || (after !== undefined && after.collapsed);
+        }
 
         scope.splitbar.notifyToggleBefore = function(isCollapsed) {
-          scope.splitbar.collapsed = (before && before.collapsed) || (after && after.collapsed);
+          scope.splitbar.collapsed = getCollapse();
           if(isCollapsed) {
             afterButton.css('display', 'none');
 
@@ -721,7 +727,7 @@ angular.module('ui.layout', [])
         };
 
         scope.splitbar.notifyToggleAfter = function(isCollapsed) {
-          scope.splitbar.collapsed = (before && before.collapsed) || (after && after.collapsed);
+          scope.splitbar.collapsed = getCollapse();
           if(isCollapsed) {
             prevButton.css('display', 'none');
 
