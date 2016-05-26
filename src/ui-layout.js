@@ -696,7 +696,7 @@ angular.module('ui.layout', [])
         afterIcon.addClass(afterIconClass);
 
         scope.splitbar.notifyToggleBefore = function(isCollapsed) {
-          scope.splitbar.collapsed = isCollapsed;
+          scope.splitbar.collapsed = (before && before.collapsed) || (after && after.collapsed);
           if(isCollapsed) {
             afterButton.css('display', 'none');
 
@@ -721,7 +721,7 @@ angular.module('ui.layout', [])
         };
 
         scope.splitbar.notifyToggleAfter = function(isCollapsed) {
-          scope.splitbar.collapsed = isCollapsed;
+          scope.splitbar.collapsed = (before && before.collapsed) || (after && after.collapsed);
           if(isCollapsed) {
             prevButton.css('display', 'none');
 
