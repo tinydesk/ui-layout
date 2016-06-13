@@ -188,17 +188,6 @@ angular.module('ui.layout', [])
       }
     }
 
-    function loadContainerState(container) {
-      // load uncollapsedSize from local storage if available:
-      container.uncollapsedSize = null;
-      if($window.localStorage !== undefined) {
-        container.uncollapsedSize = $window.localStorage.getItem(container.storageId);
-      }
-      if(container.uncollapsedSize === null) {
-        container.uncollapsedSize = container.size;
-      }
-    }
-
     /**
      * Updates the storage ids of all containers according to the id of this controller and the index of the container.
      */
@@ -429,7 +418,6 @@ angular.module('ui.layout', [])
       ctrl.containers.splice(index, 0, container);
 
       updateContainerStorageIds();
-      loadContainerState(container);
 
       ctrl.calculate();
     };
@@ -823,8 +811,8 @@ angular.module('ui.layout', [])
   }])
 
   .directive('uiLayoutContainer',
-    ['LayoutContainer', '$compile',
-      function(LayoutContainer, $compile) {
+    ['LayoutContainer', '$compile', '$window',
+      function(LayoutContainer, $compile, $window) {
         return {
           restrict: 'AE',
           require: '^uiLayout',
@@ -873,8 +861,25 @@ angular.module('ui.layout', [])
                   element.addClass(animationClass);
                 }
 
-				scope.$watch('size', function(size) {
-                  scope.container.uncollapsedSize = size;
+                 function loadContainerState(def) {
+                  // load uncollapsedSize from local storage if available:
+                  scope.container.uncollapsedSize = null;
+                  if($window.localStorage !== undefined) {
+                    scope.container.uncollapsedSize = $window.localStorage.getItem(scope.container.storageId);
+                  }
+                  if(scope.container.uncollapsedSize === null) {
+                    scope.container.uncollapsedSize = def;
+                  }
+                }
+
+                var sizeInitialised;
+                scope.$watch('size', function(size) {
+                  if (!sizeInitialised) {
+                    loadContainerState(size);
+                    sizeInitialised = true;
+                  } else {
+                    scope.container.uncollapsedSize = size;
+                  }
                   ctrl.calculate();
                 });
                 scope.$watch('minSize', function(minSize) {
