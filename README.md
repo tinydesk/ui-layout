@@ -122,6 +122,10 @@ Default: `false`
 
 Whether to completely hide a collapsed container, even if it has a minimum size set. If this option is set to `false` a collapsed container will have a size equal to the `min-size` property.
 
+### disableResize
+
+Disables resizing when dragging the splitbar.
+
 ## Child Attributes
 
 ### uiLayoutContainer

@@ -626,6 +626,10 @@ angular.module('ui.layout', [])
           ctrl.calculate();
         });
 
+        scope.$watch(attrs.disableResize, function(disableResize) {
+          ctrl.disableResize = disableResize;
+        });
+
         function onResize() {
           ctrl.calculate();
           ctrl.containers.forEach(function(c) {
@@ -761,7 +765,9 @@ angular.module('ui.layout', [])
         });
 
         function handleMouseMove(event) {
-          ctrl.mouseMoveHandler(event);
+          if (!ctrl.disableResize) {
+            ctrl.mouseMoveHandler(event);
+          }
         }
 
         function handleMouseUp(event) {
