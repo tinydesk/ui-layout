@@ -151,7 +151,6 @@ angular.module('ui.layout', [])
             if(debounceEvent) $timeout.cancel(debounceEvent);
             debounceEvent = $timeout(function() {
               $scope.$digest();
-              $scope.$broadcast('ui.layout.resize', beforeContainer, afterContainer);
               debounceEvent = null;
             }, 50, false);
           }
@@ -386,9 +385,6 @@ angular.module('ui.layout', [])
             newSize = (newSize !== null) ? newSize : autoSize;
             if (c.size !== newSize) {
               c.size = newSize;
-              if (i >= 2) {
-                $scope.$broadcast('ui.layout.resize', ctrl.containers[i], ctrl.containers[i-2]);
-              }
             }
           } else {
             c.size = (c.collapsed && opts.hideCollapsedSplitbar) ? 0 : dividerSize;
@@ -896,6 +892,7 @@ angular.module('ui.layout', [])
 
                 scope.container.updateSize = function() {
                   element.css(ctrl.sizeProperties.sizeProperty, scope.container.size + 'px');
+                  scope.$broadcast('ui.layout.resize', scope.container);
                 };
 
                 scope.$watch('container.size', function(newValue) {
