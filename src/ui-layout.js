@@ -652,6 +652,10 @@ angular.module('ui.layout', [])
           ctrl.calculate();
         });
 
+        scope.$watch(attrs.disableResize, function(disableResize) {
+          ctrl.disableResize = disableResize;
+        });
+
         function onResize() {
           scope.$evalAsync(function() {
             ctrl.calculate();
@@ -835,7 +839,9 @@ angular.module('ui.layout', [])
           e.stopPropagation();
 
           htmlElement.on('mousemove touchmove', function(event) {
-            scope.$apply(angular.bind(ctrl, ctrl.mouseMoveHandler, event));
+            if (!ctrl.disableResize) {
+              scope.$apply(angular.bind(ctrl, ctrl.mouseMoveHandler, event));
+            }
           });
           return false;
         });

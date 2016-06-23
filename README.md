@@ -100,6 +100,13 @@ Default: `false`
 
 Like `disableToggle` above but only removes the arrows on mobile devices (max-device-width: 480px).
 
+### disableResize
+
+Type: `Boolean`
+Default: `false`
+
+Disables resizing when dragging the splitbar. 
+
 
 ## Child Attributes
 
