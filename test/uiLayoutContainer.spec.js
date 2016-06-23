@@ -44,8 +44,8 @@ describe('Directive: uiLayoutContainer', function () {
     var divs = element.find('div'),
       beforeContainer = divs[0],
       afterContainer = divs[2],
-      bcScope = angular.element(beforeContainer).isolateScope(),
-      acScope = angular.element(afterContainer).isolateScope();
+      bcScope = angular.element(beforeContainer).scope(),
+      acScope = angular.element(afterContainer).scope();
 
     expect(bcScope.container.collapsed).toEqual(true);
     expect(bcScope.container.resizable).toEqual(false);

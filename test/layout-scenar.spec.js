@@ -76,7 +76,7 @@ function splitMoveTests(description, startEvent, moveEvent, endEvent) {
         element = createDirective();
 
         element_bb = element[0].getBoundingClientRect();
-        leftContainer = angular.element(_jQuery(element[0]).find('header')[0]).isolateScope();
+        leftContainer = angular.element(_jQuery(element[0]).find('header')[0]).scope();
         $splitbar = _jQuery(element[0]).find('.ui-splitbar');
         splitbar_bb = $splitbar[0].getBoundingClientRect();
 

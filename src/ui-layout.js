@@ -822,14 +822,7 @@ angular.module('ui.layout', [])
         return {
           restrict: 'AE',
           require: '^uiLayout',
-          scope: {
-            collapsed: '=',
-            resizable: '=',
-            size: '@',
-            minSize: '@',
-            maxSize: '@'
-          },
-
+          scope: true,
           compile: function() {
             return {
               pre: function(scope, element, attrs, ctrl) {
@@ -840,17 +833,13 @@ angular.module('ui.layout', [])
                 scope.container.layoutId = ctrl.id;
                 scope.container.isCentral = attrs.uiLayoutContainer === 'central';
 
-                if (angular.isDefined(scope.collapsed)) {
-                  scope.container.collapsed = scope.collapsed;
+                if (angular.isDefined(attrs.resizable)) {
+                  scope.container.resizable = scope.$eval(attrs.resizable);
                 }
+                scope.container.size = attrs.size;
 
-                if (angular.isDefined(scope.resizable)) {
-                  scope.container.resizable = scope.resizable;
-                }
-                scope.container.size = scope.size;
-
-                scope.container.minSize = scope.minSize;
-                scope.container.maxSize = scope.maxSize;
+                scope.container.minSize = attrs.minSize;
+                scope.container.maxSize = attrs.maxSize;
                 ctrl.addContainer(scope.container);
 
                 element.on('$destroy', function() {
@@ -878,8 +867,9 @@ angular.module('ui.layout', [])
                   }
                 }
 
+                loadContainerState(null);
                 var sizeInitialised;
-                scope.$watch('size', function(size) {
+                attrs.$observe('size', function(size) {
                   if (!sizeInitialised) {
                     loadContainerState(size);
                     sizeInitialised = true;
@@ -888,18 +878,18 @@ angular.module('ui.layout', [])
                   }
                   ctrl.calculate();
                 });
-                scope.$watch('minSize', function(minSize) {
+                attrs.$observe('minSize', function(minSize) {
                   scope.container.minSize = minSize;
                   ctrl.calculate();
                 });
-                scope.$watch('maxSize', function(maxSize) {
+                attrs.$observe('maxSize', function(maxSize) {
                   scope.container.maxSize = maxSize;
                   ctrl.calculate();
                 });
 
-                scope.$watch('collapsed', function () {
-                  if (angular.isDefined(scope.collapsed)) {
-                    scope.container.collapsed = scope.collapsed;
+                scope.$watch(attrs.collapsed, function (collapsed) {
+                  if (angular.isDefined(collapsed)) {
+                    scope.container.collapsed = collapsed;
                     ctrl.processToggleContainer(ctrl.containers.indexOf(scope.container));
                   }
                 });
