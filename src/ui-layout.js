@@ -306,6 +306,8 @@ angular.module('ui.layout', [])
       var originalSize = availableSize;
       var usedSpace = 0;
       var numOfAutoContainers = 0;
+      var sumMin = 0;
+      var sumMax = 0;
       if(ctrl.containers.length > 0 && $element.children().length > 0) {
 
         // calculate sizing for ctrl.containers
@@ -349,6 +351,7 @@ angular.module('ui.layout', [])
 
             if(opts.sizes[i] === 'auto') {
               numOfAutoContainers++;
+              sumMin += (opts.minSizes[i] || 0);
             } else {
               availableSize -= opts.sizes[i];
             }
@@ -363,6 +366,26 @@ angular.module('ui.layout', [])
          */
         var autoSize = Math.floor(availableSize / numOfAutoContainers),
           remainder = availableSize - autoSize * numOfAutoContainers;
+        
+        var autoSizeAfterMin = Math.floor(Math.max(availableSize - sumMin, 0) / numOfAutoContainers);
+        remainder = availableSize - autoSizeAfterMin * numOfAutoContainers + sumMin;
+
+        
+
+        var availableAfterMax = 0;
+        var numOfGreaterMax = 0;
+        for(i=0; i < ctrl.containers.length; i++) {
+          if(opts.sizes[i] === 'auto') {
+            if (opts.maxSizes[i] && opts.maxSizes[i] < autoSizeAfterMin + (opts.minSizes[i] || 0)) {
+              availableAfterMax += autoSizeAfterMin - opts.maxSizes[i];
+            } else {
+              numOfGreaterMax++;
+            }
+          }
+        }
+
+        var autoSizeAfterMax = Math.floor(availableAfterMax / numOfGreaterMax);
+
         for(i=0; i < ctrl.containers.length; i++) {
           c = ctrl.containers[i];
           c.position = usedSpace;
@@ -373,11 +396,18 @@ angular.module('ui.layout', [])
 
           if(!LayoutContainer.isSplitbar(c)) {
             var newSize;
+
+            var autoSize = (opts.maxSizes[i] && opts.maxSizes[i] < autoSizeAfterMin + (opts.minSizes[i] || 0)) ?
+              opts.maxSizes[i] :
+              (opts.minSizes[i] || 0) + autoSizeAfterMin + autoSizeAfterMax;
+
             if(opts.sizes[i] === 'auto') {
-              newSize = autoSize;
               // add the rounding down remainder to the last auto-sized container in the layout
-              if (remainder > 0 && i === ctrl.containers.length - 1) {
-                newSize += remainder;
+              if (i === ctrl.containers.length - 1) {
+                newSize = originalSize - usedSpace;
+              } else {
+                newSize = autoSize
+                availableSize -= c.size;
               }
             } else {
               newSize = opts.sizes[i];
